@@ -1,6 +1,6 @@
 # SWANA
 
-Smart Web Analytics & Narrative Assistant
+Smart Web Analytics & Narrative Assistant By Alyaan Mir and Amaan Azim
 
 ## Overview
 
