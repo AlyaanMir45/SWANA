@@ -2,9 +2,15 @@ import pandas as pd
 import streamlit as st
 
 from src.loader import load_dataset
+from src.analyzer import (
+    get_dataset_summary,
+    get_column_summary,
+    get_data_quality,
+)
 
 
 # Configure the browser tab and page layout
+
 st.set_page_config(
     page_title="SWANA",
     layout="wide",
@@ -12,6 +18,7 @@ st.set_page_config(
 
 
 # Page header
+
 st.title("SWANA")
 st.subheader("Smart Web Analytics & Narrative Assistant")
 
@@ -22,6 +29,7 @@ st.write(
 
 
 # File uploader
+
 uploaded_file = st.file_uploader(
     "Upload a CSV or Excel file",
     type=["csv", "xlsx", "xls"],
@@ -33,13 +41,23 @@ if uploaded_file is None:
 
 else:
     try:
-        # Load the uploaded dataset using our loader module
+        # Load the uploaded dataset
         dataframe = load_dataset(uploaded_file)
+
+        # Analyze the dataset
+        summary = get_dataset_summary(dataframe)
+        column_information = get_column_summary(dataframe)
+        quality_report = get_data_quality(dataframe)
+
+        # Get data quality results
+        missing_by_column = quality_report["missing_by_column"]
+        duplicate_rows = quality_report["duplicate_rows"]
 
         st.success(f"Successfully loaded: {uploaded_file.name}")
 
 
         # Dataset overview
+
         st.header("Dataset Overview")
 
         column1, column2, column3 = st.columns(3)
@@ -47,27 +65,72 @@ else:
         with column1:
             st.metric(
                 "Rows",
-                f"{dataframe.shape[0]:,}"
+                f"{summary['rows']:,}"
             )
 
         with column2:
             st.metric(
                 "Columns",
-                dataframe.shape[1]
+                summary["columns"]
             )
 
         with column3:
-            missing_values = int(
-                dataframe.isna().sum().sum()
-            )
-
             st.metric(
                 "Missing Values",
-                f"{missing_values:,}"
+                f"{summary['missing_values']:,}"
             )
+
+
+        column4, column5, column6 = st.columns(3)
+
+        with column4:
+            st.metric(
+                "Duplicate Rows",
+                f"{summary['duplicate_rows']:,}"
+            )
+
+        with column5:
+            st.metric(
+                "Numeric Columns",
+                summary["numeric_columns"]
+            )
+
+        with column6:
+            st.metric(
+                "Text Columns",
+                summary["text_columns"]
+            )
+
+
+        # Data quality
+
+        st.header("Data Quality")
+
+        # Show missing value problems
+        if missing_by_column:
+            st.warning("Missing values were detected.")
+
+            for column, missing_count in missing_by_column.items():
+                st.write(
+                    f"{column}: {missing_count} missing value(s)"
+                )
+
+        else:
+            st.success("No missing values were detected.")
+
+
+        # Show duplicate row problems
+        if duplicate_rows:
+            st.warning(
+                f"{duplicate_rows} duplicate row(s) were detected."
+            )
+
+        else:
+            st.success("No duplicate rows were detected.")
 
 
         # Dataset preview
+
         st.header("Data Preview")
 
         preview_rows = st.slider(
@@ -84,16 +147,8 @@ else:
 
 
         # Column information
-        st.header("Column Information")
 
-        column_information = pd.DataFrame(
-            {
-                "Column": dataframe.columns,
-                "Data Type": dataframe.dtypes.astype(str).values,
-                "Missing Values": dataframe.isna().sum().values,
-                "Unique Values": dataframe.nunique().values,
-            }
-        )
+        st.header("Column Information")
 
         st.dataframe(
             column_information,
@@ -103,6 +158,7 @@ else:
 
 
         # Numeric statistics
+
         numeric_columns = dataframe.select_dtypes(
             include="number"
         )
