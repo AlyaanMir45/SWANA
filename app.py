@@ -7,6 +7,12 @@ from src.analyzer import (
     get_column_summary,
     get_data_quality,
 )
+from src.cleaner import (
+    remove_duplicates,
+    remove_missing_rows,
+    remove_empty_columns,
+    standardize_column_names,
+)
 
 
 # Configure the browser tab and page layout
@@ -24,7 +30,7 @@ st.subheader("Smart Web Analytics & Narrative Assistant")
 
 st.write(
     "Upload a CSV or Excel dataset to explore its structure, "
-    "preview its contents, and view basic statistics."
+    "clean the data, and view basic statistics."
 )
 
 
@@ -41,10 +47,86 @@ if uploaded_file is None:
 
 else:
     try:
-        # Load the uploaded dataset
-        dataframe = load_dataset(uploaded_file)
+        # Create an ID for the uploaded file
+        file_id = (
+            uploaded_file.name,
+            uploaded_file.size,
+        )
 
-        # Analyze the dataset
+        # Load a new dataset only when a new file is uploaded
+        if st.session_state.get("file_id") != file_id:
+            dataframe = load_dataset(uploaded_file)
+
+            st.session_state["original_dataframe"] = dataframe.copy()
+            st.session_state["dataframe"] = dataframe.copy()
+            st.session_state["file_id"] = file_id
+
+        # Get the current working dataset
+        dataframe = st.session_state["dataframe"]
+
+        st.success(f"Successfully loaded: {uploaded_file.name}")
+
+
+        # Data cleaning
+
+        st.header("Data Cleaning")
+
+        st.write(
+            "Apply cleaning operations to the uploaded dataset."
+        )
+
+        clean_column1, clean_column2 = st.columns(2)
+
+        with clean_column1:
+            if st.button(
+                "Remove Duplicate Rows",
+                use_container_width=True,
+            ):
+                st.session_state["dataframe"] = remove_duplicates(
+                    dataframe
+                )
+                st.rerun()
+
+            if st.button(
+                "Remove Empty Columns",
+                use_container_width=True,
+            ):
+                st.session_state["dataframe"] = remove_empty_columns(
+                    dataframe
+                )
+                st.rerun()
+
+        with clean_column2:
+            if st.button(
+                "Remove Rows With Missing Values",
+                use_container_width=True,
+            ):
+                st.session_state["dataframe"] = remove_missing_rows(
+                    dataframe
+                )
+                st.rerun()
+
+            if st.button(
+                "Standardize Column Names",
+                use_container_width=True,
+            ):
+                st.session_state["dataframe"] = standardize_column_names(
+                    dataframe
+                )
+                st.rerun()
+
+        # Reset the dataset
+        if st.button("Reset Dataset"):
+            st.session_state["dataframe"] = (
+                st.session_state["original_dataframe"].copy()
+            )
+            st.rerun()
+
+
+        # Analyze the current dataset
+
+        dataframe = st.session_state["dataframe"]
+
         summary = get_dataset_summary(dataframe)
         column_information = get_column_summary(dataframe)
         quality_report = get_data_quality(dataframe)
@@ -52,8 +134,6 @@ else:
         # Get data quality results
         missing_by_column = quality_report["missing_by_column"]
         duplicate_rows = quality_report["duplicate_rows"]
-
-        st.success(f"Successfully loaded: {uploaded_file.name}")
 
 
         # Dataset overview
@@ -133,17 +213,23 @@ else:
 
         st.header("Data Preview")
 
-        preview_rows = st.slider(
-            "Number of rows to display",
-            min_value=5,
-            max_value=min(100, len(dataframe)),
-            value=min(10, len(dataframe)),
-        )
+        if len(dataframe) > 0:
+            preview_rows = st.slider(
+                "Number of rows to display",
+                min_value=1,
+                max_value=min(100, len(dataframe)),
+                value=min(10, len(dataframe)),
+            )
 
-        st.dataframe(
-            dataframe.head(preview_rows),
-            use_container_width=True,
-        )
+            st.dataframe(
+                dataframe.head(preview_rows),
+                use_container_width=True,
+            )
+
+        else:
+            st.warning(
+                "The dataset does not contain any rows."
+            )
 
 
         # Column information
