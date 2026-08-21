@@ -13,6 +13,9 @@ from src.cleaner import (
     remove_empty_columns,
     standardize_column_names,
 )
+from src.interpreter import interpret_request
+from src.command_handler import parse_command
+from src.dispatcher import dispatch_command
 
 
 # Configure the browser tab and page layout
@@ -65,6 +68,54 @@ else:
         dataframe = st.session_state["dataframe"]
 
         st.success(f"Successfully loaded: {uploaded_file.name}")
+
+
+        # Ask SWANA
+
+        st.header("Ask SWANA")
+
+        st.write(
+            "Enter a command to clean or analyze the dataset."
+        )
+
+        user_request = st.text_input(
+            "What would you like SWANA to do?"
+        )
+
+        if st.button("Run Command"):
+            try:
+                # Interpret the user's request
+                command = interpret_request(user_request)
+
+                # Validate the command
+                command = parse_command(command)
+
+                # Run the command
+                result = dispatch_command(
+                    dataframe,
+                    command,
+                )
+
+                # Save the cleaned dataset
+                if isinstance(result, pd.DataFrame):
+                    st.session_state["dataframe"] = result
+
+                    st.success(
+                        "Command completed successfully."
+                    )
+
+                    st.rerun()
+
+                # Show an analysis result
+                else:
+                    st.success(
+                        "Command completed successfully."
+                    )
+
+                    st.write(result)
+
+            except ValueError as error:
+                st.error(str(error))
 
 
         # Data cleaning

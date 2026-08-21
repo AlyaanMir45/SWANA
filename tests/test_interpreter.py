@@ -43,3 +43,32 @@ def test_standardize_column_names():
 def test_unknown_request():
     with pytest.raises(ValueError):
         interpret_request("Make the dataset better")
+
+
+# Test the average operation
+def test_average_request():
+    result = interpret_request(
+        "What is the average annual salary?"
+    )
+
+    assert result["operation"] == "average"
+    assert result["column"] == "annual_salary"
+
+
+# Test the sum operation
+def test_sum_request():
+    result = interpret_request(
+        "What is the sum of annual salary?"
+    )
+
+    assert result["operation"] == "sum"
+    assert result["column"] == "annual_salary"
+
+
+# Test the count operation
+def test_count_request():
+    result = interpret_request(
+        "Count the rows"
+    )
+
+    assert result["operation"] == "count"
