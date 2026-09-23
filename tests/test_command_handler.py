@@ -141,3 +141,40 @@ def test_valid_median_operation():
 
     assert result["operation"] == "median"
     assert result["column"] == "annual_salary"
+
+
+# Test a grouped average command
+def test_grouped_average_command():
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "group_by": "department",
+    }
+
+    result = parse_command(command)
+
+    assert result == command
+
+
+# Test a grouped count command
+def test_grouped_count_command():
+    command = {
+        "operation": "count",
+        "group_by": "department",
+    }
+
+    result = parse_command(command)
+
+    assert result == command
+
+
+# Test an invalid grouping column
+def test_invalid_grouping_column():
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "group_by": "",
+    }
+
+    with pytest.raises(ValueError):
+        parse_command(command)

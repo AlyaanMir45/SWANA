@@ -25,7 +25,9 @@ def parse_command(command: dict) -> dict:
 
     if action is not None:
         if action not in ALLOWED_ACTIONS:
-            raise ValueError(f"Unsupported action: {action}")
+            raise ValueError(
+                f"Unsupported action: {action}"
+            )
 
         parameters = command.get("parameters", {})
 
@@ -58,46 +60,20 @@ def parse_command(command: dict) -> dict:
 
             parsed_command["column"] = column
 
+        # Check for a grouping column
+        group_by = command.get("group_by")
+
+        if group_by is not None:
+            if not isinstance(group_by, str) or not group_by.strip():
+                raise ValueError(
+                    "A valid grouping column is required."
+                )
+
+            parsed_command["group_by"] = group_by
+
         return parsed_command
 
     # No valid command type was found
-    raise ValueError("Command must include an action or operation.")
-
-
-# Test a valid minimum operation
-def test_valid_minimum_operation():
-    command = {
-        "operation": "minimum",
-        "column": "annual_salary"
-    }
-
-    result = parse_command(command)
-
-    assert result["operation"] == "minimum"
-    assert result["column"] == "annual_salary"
-
-
-# Test a valid maximum operation
-def test_valid_maximum_operation():
-    command = {
-        "operation": "maximum",
-        "column": "annual_salary"
-    }
-
-    result = parse_command(command)
-
-    assert result["operation"] == "maximum"
-    assert result["column"] == "annual_salary"
-
-
-# Test a valid median operation
-def test_valid_median_operation():
-    command = {
-        "operation": "median",
-        "column": "annual_salary"
-    }
-
-    result = parse_command(command)
-
-    assert result["operation"] == "median"
-    assert result["column"] == "annual_salary"
+    raise ValueError(
+        "Command must include an action or operation."
+    )

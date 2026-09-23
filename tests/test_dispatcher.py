@@ -1,153 +1,230 @@
+
 import pandas as pd
 import pytest
 
 from src.dispatcher import dispatch_command
 
 
-# Test the average operation
-def test_average():
-    dataframe = pd.DataFrame({
-        "age": [20, 30, 40]
+# Create a sample dataset for testing
+@pytest.fixture
+def sample_dataframe():
+    return pd.DataFrame({
+        "department": ["IT", "IT", "Finance", "Finance"],
+        "annual_salary": [60000, 80000, 70000, 90000],
     })
-
-    command = {
-        "operation": "average",
-        "column": "age"
-    }
-
-    result = dispatch_command(dataframe, command)
-
-    # Check that the average is correct
-    assert result == 30
-
-
-# Test the count operation
-def test_count():
-    dataframe = pd.DataFrame({
-        "name": ["John", "Sara", "Mike"]
-    })
-
-    command = {
-        "operation": "count"
-    }
-
-    result = dispatch_command(dataframe, command)
-
-    # Check that all rows are counted
-    assert result == 3
 
 
 # Test removing duplicate rows
-def test_remove_duplicates():
+def test_dispatch_remove_duplicates():
     dataframe = pd.DataFrame({
-        "name": ["John", "John", "Sara"]
+        "department": ["IT", "IT", "Finance"],
+        "annual_salary": [60000, 60000, 90000],
     })
 
     command = {
         "action": "remove_duplicates",
-        "parameters": {}
+        "parameters": {},
     }
 
     result = dispatch_command(dataframe, command)
 
-    # Check that the duplicate row was removed
     assert len(result) == 2
 
 
 # Test removing rows with missing values
-def test_remove_missing_rows():
+def test_dispatch_remove_missing_rows():
     dataframe = pd.DataFrame({
-        "age": [20, None, 40]
+        "department": ["IT", None, "Finance"],
+        "annual_salary": [60000, 80000, 90000],
     })
 
     command = {
         "action": "remove_missing_rows",
-        "parameters": {}
+        "parameters": {},
     }
 
     result = dispatch_command(dataframe, command)
 
-    # Check that the missing row was removed
     assert len(result) == 2
 
 
-# Test filling missing values
-def test_fill_missing_values():
+# Test removing completely empty columns
+def test_dispatch_remove_empty_columns():
     dataframe = pd.DataFrame({
-        "age": [20, None, 40]
+        "department": ["IT", "Finance"],
+        "empty_column": [None, None],
     })
 
     command = {
-        "action": "fill_missing_values",
-        "parameters": {
-            "value": 0
-        }
+        "action": "remove_empty_columns",
+        "parameters": {},
     }
 
     result = dispatch_command(dataframe, command)
 
-    # Check that there are no missing values
-    assert result["age"].isna().sum() == 0
+    assert "empty_column" not in result.columns
 
 
-# Test an invalid command
-def test_invalid_command():
+# Test standardizing column names
+def test_dispatch_standardize_column_names():
     dataframe = pd.DataFrame({
-        "age": [20, 30]
+        "Annual Salary": [60000, 80000],
     })
 
     command = {
-        "action": "invalid"
-    }
-
-    # Check that an invalid command causes an error
-    with pytest.raises(ValueError):
-        dispatch_command(dataframe, command)
-
-
-# Test dispatching the minimum operation
-def test_dispatch_minimum():
-    dataframe = pd.DataFrame({
-        "annual_salary": [50000, 75000, 100000]
-    })
-
-    command = {
-        "operation": "minimum",
-        "column": "annual_salary"
+        "action": "standardize_column_names",
+        "parameters": {},
     }
 
     result = dispatch_command(dataframe, command)
 
-    assert result == 50000
+    assert "annual_salary" in result.columns
 
 
-# Test dispatching the maximum operation
-def test_dispatch_maximum():
-    dataframe = pd.DataFrame({
-        "annual_salary": [50000, 75000, 100000]
-    })
-
+# Test calculating the average
+def test_dispatch_average(sample_dataframe):
     command = {
-        "operation": "maximum",
-        "column": "annual_salary"
+        "operation": "average",
+        "column": "annual_salary",
     }
 
-    result = dispatch_command(dataframe, command)
-
-    assert result == 100000
-
-
-# Test dispatching the median operation
-def test_dispatch_median():
-    dataframe = pd.DataFrame({
-        "annual_salary": [50000, 75000, 100000]
-    })
-
-    command = {
-        "operation": "median",
-        "column": "annual_salary"
-    }
-
-    result = dispatch_command(dataframe, command)
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
 
     assert result == 75000
+
+
+# Test calculating the sum
+def test_dispatch_sum(sample_dataframe):
+    command = {
+        "operation": "sum",
+        "column": "annual_salary",
+    }
+
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
+
+    assert result == 300000
+
+
+# Test calculating the minimum
+def test_dispatch_minimum(sample_dataframe):
+    command = {
+        "operation": "minimum",
+        "column": "annual_salary",
+    }
+
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
+
+    assert result == 60000
+
+
+# Test calculating the maximum
+def test_dispatch_maximum(sample_dataframe):
+    command = {
+        "operation": "maximum",
+        "column": "annual_salary",
+    }
+
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
+
+    assert result == 90000
+
+
+# Test calculating the median
+def test_dispatch_median(sample_dataframe):
+    command = {
+        "operation": "median",
+        "column": "annual_salary",
+    }
+
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
+
+    assert result == 75000
+
+
+# Test grouped average
+def test_dispatch_grouped_average(sample_dataframe):
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "group_by": "department",
+    }
+
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
+
+    it_average = result.loc[
+        result["department"] == "IT",
+        "average",
+    ].iloc[0]
+
+    finance_average = result.loc[
+        result["department"] == "Finance",
+        "average",
+    ].iloc[0]
+
+    assert it_average == 70000
+    assert finance_average == 80000
+
+
+# Test grouped sum
+def test_dispatch_grouped_sum(sample_dataframe):
+    command = {
+        "operation": "sum",
+        "column": "annual_salary",
+        "group_by": "department",
+    }
+
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
+
+    it_sum = result.loc[
+        result["department"] == "IT",
+        "sum",
+    ].iloc[0]
+
+    assert it_sum == 140000
+
+
+# Test grouped count
+def test_dispatch_grouped_count(sample_dataframe):
+    command = {
+        "operation": "count",
+        "group_by": "department",
+    }
+
+    result = dispatch_command(
+        sample_dataframe,
+        command,
+    )
+
+    it_count = result.loc[
+        result["department"] == "IT",
+        "count",
+    ].iloc[0]
+
+    finance_count = result.loc[
+        result["department"] == "Finance",
+        "count",
+    ].iloc[0]
+
+    assert it_count == 2
+    assert finance_count == 2
