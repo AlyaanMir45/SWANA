@@ -1,3 +1,4 @@
+
 import pandas as pd
 
 
@@ -18,6 +19,9 @@ def execute_operation(
         "average",
         "sum",
         "count",
+        "minimum",
+        "maximum",
+        "median",
     ]
 
     # Check that the operation is supported
@@ -44,3 +48,15 @@ def execute_operation(
     # Count the rows
     elif operation == "count":
         return len(dataframe)
+
+    # Find the minimum value
+    elif operation == "minimum":
+        return dataframe[column].min()
+
+    # Find the maximum value
+    elif operation == "maximum":
+        return dataframe[column].max()
+
+    # Calculate the median
+    elif operation == "median":
+        return dataframe[column].median()

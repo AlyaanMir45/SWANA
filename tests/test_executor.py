@@ -93,3 +93,51 @@ def test_unsupported_operation():
     # Make sure unsupported operations are rejected
     with pytest.raises(ValueError):
         execute_operation(test_data, instruction)
+
+
+# Test the minimum operation
+def test_minimum_operation():
+    dataframe = pd.DataFrame({
+        "annual_salary": [50000, 75000, 100000]
+    })
+
+    instruction = {
+        "operation": "minimum",
+        "column": "annual_salary"
+    }
+
+    result = execute_operation(dataframe, instruction)
+
+    assert result == 50000
+
+
+# Test the maximum operation
+def test_maximum_operation():
+    dataframe = pd.DataFrame({
+        "annual_salary": [50000, 75000, 100000]
+    })
+
+    instruction = {
+        "operation": "maximum",
+        "column": "annual_salary"
+    }
+
+    result = execute_operation(dataframe, instruction)
+
+    assert result == 100000
+
+
+# Test the median operation
+def test_median_operation():
+    dataframe = pd.DataFrame({
+        "annual_salary": [50000, 75000, 100000]
+    })
+
+    instruction = {
+        "operation": "median",
+        "column": "annual_salary"
+    }
+
+    result = execute_operation(dataframe, instruction)
+
+    assert result == 75000
