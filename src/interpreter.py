@@ -1,3 +1,4 @@
+
 # Cleaning actions and phrases the interpreter understands
 COMMANDS = {
     "remove_duplicates": [
@@ -20,6 +21,16 @@ COMMANDS = {
 }
 
 
+# Analysis operations and their keywords
+OPERATIONS = {
+    "average": ["average", "mean"],
+    "sum": ["sum", "total"],
+    "minimum": ["minimum", "lowest", "smallest", "min"],
+    "maximum": ["maximum", "highest", "largest", "max"],
+    "median": ["median"],
+}
+
+
 def interpret_request(user_request: str) -> dict:
     # Make the request lowercase
     request = user_request.lower()
@@ -30,33 +41,23 @@ def interpret_request(user_request: str) -> dict:
             "operation": "count",
         }
 
-    # Check for an average request
-    if "average" in request:
-        column = request.replace("what is the", "")
-        column = column.replace("average", "")
-        column = column.replace("of", "")
-        column = column.replace("?", "")
-        column = column.strip()
-        column = column.replace(" ", "_")
+    # Check for an analysis operation
+    for operation, keywords in OPERATIONS.items():
+        for keyword in keywords:
+            if keyword in request:
+                column = request.replace("what is the", "")
+                column = column.replace("calculate the", "")
+                column = column.replace("find the", "")
+                column = column.replace(keyword, "")
+                column = column.replace("of", "")
+                column = column.replace("?", "")
+                column = column.strip()
+                column = column.replace(" ", "_")
 
-        return {
-            "operation": "average",
-            "column": column,
-        }
-
-    # Check for a sum request
-    if "sum" in request:
-        column = request.replace("what is the", "")
-        column = column.replace("sum", "")
-        column = column.replace("of", "")
-        column = column.replace("?", "")
-        column = column.strip()
-        column = column.replace(" ", "_")
-
-        return {
-            "operation": "sum",
-            "column": column,
-        }
+                return {
+                    "operation": operation,
+                    "column": column,
+                }
 
     # Look for a matching cleaning command
     for action, keywords in COMMANDS.items():

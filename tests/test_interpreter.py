@@ -72,3 +72,39 @@ def test_count_request():
     )
 
     assert result["operation"] == "count"
+
+
+# Test a minimum request
+def test_minimum_request():
+    result = interpret_request(
+        "What is the minimum annual salary?"
+    )
+
+    assert result == {
+        "operation": "minimum",
+        "column": "annual_salary",
+    }
+
+
+# Test a maximum request
+def test_maximum_request():
+    result = interpret_request(
+        "What is the maximum annual salary?"
+    )
+
+    assert result == {
+        "operation": "maximum",
+        "column": "annual_salary",
+    }
+
+
+# Test a median request
+def test_median_request():
+    result = interpret_request(
+        "What is the median annual salary?"
+    )
+
+    assert result == {
+        "operation": "median",
+        "column": "annual_salary",
+    }

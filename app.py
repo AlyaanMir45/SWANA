@@ -13,7 +13,7 @@ from src.cleaner import (
     remove_empty_columns,
     standardize_column_names,
 )
-from src.interpreter import interpret_request
+from src.llm_client import generate_command
 from src.command_handler import parse_command
 from src.dispatcher import dispatch_command
 
@@ -83,9 +83,16 @@ else:
         )
 
         if st.button("Run Command"):
+            if not user_request.strip():
+                st.warning("Enter a command first.")
+                st.stop()
+
             try:
-                # Interpret the user's request
-                command = interpret_request(user_request)
+                # Convert the user's request into a command
+                command = generate_command(
+                    user_request,
+                    dataframe.columns.tolist(),
+                )
 
                 # Validate the command
                 command = parse_command(command)

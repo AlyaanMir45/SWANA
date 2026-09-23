@@ -103,3 +103,51 @@ def test_invalid_command():
     # Check that an invalid command causes an error
     with pytest.raises(ValueError):
         dispatch_command(dataframe, command)
+
+
+# Test dispatching the minimum operation
+def test_dispatch_minimum():
+    dataframe = pd.DataFrame({
+        "annual_salary": [50000, 75000, 100000]
+    })
+
+    command = {
+        "operation": "minimum",
+        "column": "annual_salary"
+    }
+
+    result = dispatch_command(dataframe, command)
+
+    assert result == 50000
+
+
+# Test dispatching the maximum operation
+def test_dispatch_maximum():
+    dataframe = pd.DataFrame({
+        "annual_salary": [50000, 75000, 100000]
+    })
+
+    command = {
+        "operation": "maximum",
+        "column": "annual_salary"
+    }
+
+    result = dispatch_command(dataframe, command)
+
+    assert result == 100000
+
+
+# Test dispatching the median operation
+def test_dispatch_median():
+    dataframe = pd.DataFrame({
+        "annual_salary": [50000, 75000, 100000]
+    })
+
+    command = {
+        "operation": "median",
+        "column": "annual_salary"
+    }
+
+    result = dispatch_command(dataframe, command)
+
+    assert result == 75000

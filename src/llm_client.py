@@ -1,3 +1,4 @@
+
 import json
 import os
 
@@ -32,6 +33,9 @@ Supported analysis operations:
 average
 sum
 count
+minimum
+maximum
+median
 
 Supported cleaning actions:
 
@@ -43,10 +47,18 @@ standardize_column_names
 
 Rules:
 - Return only valid JSON.
-- Do not include explanations.
+- Do not include explanations or Markdown.
 - Use exact column names from the available columns.
-- For average or sum, include the column.
+- Never invent column names.
+- For all analysis operations except count, include the column.
 - For count, no column is required.
+- Interpret "mean" as average.
+- Interpret "total" as sum when referring to a numeric column.
+- Interpret "lowest", "smallest" and "min" as minimum.
+- Interpret "highest", "largest" and "max" as maximum.
+- Interpret "median" as median.
+- Use only the supported operations and cleaning actions.
+- If the request cannot be understood, return an empty JSON object.
 
 Examples:
 
@@ -56,7 +68,51 @@ What is the average annual salary?
 Response:
 {{
     "operation": "average",
-    "column": "Annual Salary"
+    "column": "annual_salary"
+}}
+
+User request:
+What is the total annual salary?
+
+Response:
+{{
+    "operation": "sum",
+    "column": "annual_salary"
+}}
+
+User request:
+Count the rows
+
+Response:
+{{
+    "operation": "count"
+}}
+
+User request:
+What is the lowest annual salary?
+
+Response:
+{{
+    "operation": "minimum",
+    "column": "annual_salary"
+}}
+
+User request:
+What is the highest annual salary?
+
+Response:
+{{
+    "operation": "maximum",
+    "column": "annual_salary"
+}}
+
+User request:
+What is the median annual salary?
+
+Response:
+{{
+    "operation": "median",
+    "column": "annual_salary"
 }}
 
 User request:

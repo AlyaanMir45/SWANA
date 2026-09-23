@@ -1,3 +1,4 @@
+
 # Cleaning actions SWANA supports
 ALLOWED_ACTIONS = {
     "remove_duplicates",
@@ -12,6 +13,9 @@ ALLOWED_OPERATIONS = {
     "average",
     "sum",
     "count",
+    "minimum",
+    "maximum",
+    "median",
 }
 
 
@@ -43,7 +47,7 @@ def parse_command(command: dict) -> dict:
             "operation": operation,
         }
 
-        # Average and sum need a column
+        # All operations except count need a column
         if operation != "count":
             column = command.get("column")
 
@@ -58,3 +62,42 @@ def parse_command(command: dict) -> dict:
 
     # No valid command type was found
     raise ValueError("Command must include an action or operation.")
+
+
+# Test a valid minimum operation
+def test_valid_minimum_operation():
+    command = {
+        "operation": "minimum",
+        "column": "annual_salary"
+    }
+
+    result = parse_command(command)
+
+    assert result["operation"] == "minimum"
+    assert result["column"] == "annual_salary"
+
+
+# Test a valid maximum operation
+def test_valid_maximum_operation():
+    command = {
+        "operation": "maximum",
+        "column": "annual_salary"
+    }
+
+    result = parse_command(command)
+
+    assert result["operation"] == "maximum"
+    assert result["column"] == "annual_salary"
+
+
+# Test a valid median operation
+def test_valid_median_operation():
+    command = {
+        "operation": "median",
+        "column": "annual_salary"
+    }
+
+    result = parse_command(command)
+
+    assert result["operation"] == "median"
+    assert result["column"] == "annual_salary"

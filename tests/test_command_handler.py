@@ -1,3 +1,4 @@
+
 import pytest
 
 from src.command_handler import parse_command
@@ -53,20 +54,21 @@ def test_valid_count_operation():
     assert result["operation"] == "count"
 
 
-# Test an unsupported cleaning action
+# Test an invalid cleaning action
 def test_invalid_action():
     command = {
-        "action": "delete_everything"
+        "action": "delete_everything",
+        "parameters": {}
     }
 
     with pytest.raises(ValueError):
         parse_command(command)
 
 
-# Test an unsupported analysis operation
+# Test an unsupported operation
 def test_invalid_operation():
     command = {
-        "operation": "median",
+        "operation": "multiply",
         "column": "annual_salary"
     }
 
@@ -94,9 +96,48 @@ def test_sum_without_column():
         parse_command(command)
 
 
-# Test a command with no action or operation
+# Test a command without an action or operation
 def test_missing_command_type():
     command = {}
 
     with pytest.raises(ValueError):
         parse_command(command)
+
+
+# Test a valid minimum operation
+def test_valid_minimum_operation():
+    command = {
+        "operation": "minimum",
+        "column": "annual_salary"
+    }
+
+    result = parse_command(command)
+
+    assert result["operation"] == "minimum"
+    assert result["column"] == "annual_salary"
+
+
+# Test a valid maximum operation
+def test_valid_maximum_operation():
+    command = {
+        "operation": "maximum",
+        "column": "annual_salary"
+    }
+
+    result = parse_command(command)
+
+    assert result["operation"] == "maximum"
+    assert result["column"] == "annual_salary"
+
+
+# Test a valid median operation
+def test_valid_median_operation():
+    command = {
+        "operation": "median",
+        "column": "annual_salary"
+    }
+
+    result = parse_command(command)
+
+    assert result["operation"] == "median"
+    assert result["column"] == "annual_salary"
