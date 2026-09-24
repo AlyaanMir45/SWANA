@@ -107,3 +107,47 @@ def test_invalid_command_pipeline(sample_dataframe):
             sample_dataframe,
             validated_command,
         )
+
+# Test the complete natural-language filtering pipeline
+def test_filtered_analysis_pipeline():
+    import json
+    from unittest.mock import patch, MagicMock
+
+    import pandas as pd
+
+    from src.llm_client import generate_command
+    from src.command_handler import parse_command
+    from src.dispatcher import dispatch_command
+
+    dataframe = pd.DataFrame({
+        "department": ["IT", "IT", "Finance", "Finance"],
+        "annual_salary": [60000, 80000, 70000, 90000],
+    })
+
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    })
+
+    with patch(
+        "src.llm_client.client.responses.create",
+        return_value=mock_response,
+    ):
+        command = generate_command(
+            "What is the average salary of the IT department?",
+            dataframe.columns.tolist(),
+        )
+
+    parsed_command = parse_command(command)
+
+    result = dispatch_command(
+        dataframe,
+        parsed_command,
+    )
+
+    assert result == 70000

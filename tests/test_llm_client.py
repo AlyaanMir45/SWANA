@@ -249,3 +249,129 @@ def test_empty_command_retries(mock_create):
         )
 
     assert mock_create.call_count == 2
+
+# Test generating a filtered average command
+@patch("src.llm_client.client.responses.create")
+def test_filtered_average_command(mock_create):
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    })
+
+    mock_create.return_value = mock_response
+
+    result = generate_command(
+        "What is the average salary of the IT department?",
+        ["annual_salary", "department"],
+    )
+
+    assert result == {
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    }
+
+    # Check that the prompt includes filtering instructions
+    prompt = mock_create.call_args.kwargs["input"]
+
+    assert "Filtering rules" in prompt
+    assert '"filter"' in prompt
+
+
+# Test generating a filtered sum command
+@patch("src.llm_client.client.responses.create")
+def test_filtered_sum_command(mock_create):
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "sum",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "Finance",
+        },
+    })
+
+    mock_create.return_value = mock_response
+
+    result = generate_command(
+        "What is the total salary for Finance?",
+        ["annual_salary", "department"],
+    )
+
+    assert result == {
+        "operation": "sum",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "Finance",
+        },
+    }
+
+
+# Test generating a filtered count command
+@patch("src.llm_client.client.responses.create")
+def test_filtered_count_command(mock_create):
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "count",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    })
+
+    mock_create.return_value = mock_response
+
+    result = generate_command(
+        "How many employees work in IT?",
+        ["department"],
+    )
+
+    assert result == {
+        "operation": "count",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    }
+
+
+# Test combining grouped analysis with filtering
+@patch("src.llm_client.client.responses.create")
+def test_grouped_filtered_command(mock_create):
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "average",
+        "column": "annual_salary",
+        "group_by": "department",
+        "filter": {
+            "column": "state",
+            "value": "California",
+        },
+    })
+
+    mock_create.return_value = mock_response
+
+    result = generate_command(
+        "What is the average salary by department "
+        "for employees in California?",
+        ["annual_salary", "department", "state"],
+    )
+
+    assert result == {
+        "operation": "average",
+        "column": "annual_salary",
+        "group_by": "department",
+        "filter": {
+            "column": "state",
+            "value": "California",
+        },
+    }

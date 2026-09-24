@@ -76,7 +76,9 @@ else:
         # Get the current working dataset
         dataframe = st.session_state["dataframe"]
 
-        st.success(f"Successfully loaded: {uploaded_file.name}")
+        st.success(
+            f"Successfully loaded: {uploaded_file.name}"
+        )
 
 
         # Ask SWANA
@@ -182,6 +184,14 @@ else:
                     hide_index=True,
                 )
 
+                # Download analysis results
+                st.download_button(
+                    label="Download Analysis Results",
+                    data=analysis_result.to_csv(index=False),
+                    file_name="swana_analysis_results.csv",
+                    mime="text/csv",
+                )
+
                 # Get the command associated with this result
                 analysis_command = st.session_state.get(
                     "analysis_command"
@@ -191,7 +201,7 @@ else:
                     analysis_command
                     and "group_by" in analysis_command
                 ):
-                    # Prepare the grouped results for visualization
+                    # Prepare grouped results for visualization
                     chart_data = prepare_grouped_chart(
                         analysis_result,
                         analysis_command["group_by"],
@@ -200,11 +210,36 @@ else:
 
                     st.subheader("Visualization")
 
-                    # Display a bar chart
-                    st.bar_chart(
-                        chart_data,
-                        use_container_width=True,
+                    # Choose the chart type
+                    chart_type = st.selectbox(
+                        "Choose a chart type",
+                        [
+                            "Bar Chart",
+                            "Line Chart",
+                            "Area Chart",
+                        ],
                     )
+
+                    # Display a bar chart
+                    if chart_type == "Bar Chart":
+                        st.bar_chart(
+                            chart_data,
+                            use_container_width=True,
+                        )
+
+                    # Display a line chart
+                    elif chart_type == "Line Chart":
+                        st.line_chart(
+                            chart_data,
+                            use_container_width=True,
+                        )
+
+                    # Display an area chart
+                    else:
+                        st.area_chart(
+                            chart_data,
+                            use_container_width=True,
+                        )
 
             # Display ordinary analysis as a single value
             else:
@@ -389,7 +424,9 @@ else:
 
         # Show missing value problems
         if missing_by_column:
-            st.warning("Missing values were detected.")
+            st.warning(
+                "Missing values were detected."
+            )
 
             for column, missing_count in missing_by_column.items():
                 st.write(
@@ -397,7 +434,9 @@ else:
                 )
 
         else:
-            st.success("No missing values were detected.")
+            st.success(
+                "No missing values were detected."
+            )
 
 
         # Show duplicate row problems
@@ -407,7 +446,9 @@ else:
             )
 
         else:
-            st.success("No duplicate rows were detected.")
+            st.success(
+                "No duplicate rows were detected."
+            )
 
 
         # Dataset preview
@@ -433,6 +474,16 @@ else:
             )
 
 
+        # Download the current working dataset
+
+        st.download_button(
+            label="Download Cleaned Dataset",
+            data=dataframe.to_csv(index=False),
+            file_name="swana_cleaned_dataset.csv",
+            mime="text/csv",
+        )
+
+
         # Column information
 
         st.header("Column Information")
@@ -450,7 +501,10 @@ else:
             include="number"
         )
 
-        if not numeric_columns.empty:
+        if (
+            len(numeric_columns.columns) > 0
+            and len(dataframe) > 0
+        ):
             st.header("Numeric Summary")
 
             st.dataframe(
@@ -460,7 +514,7 @@ else:
 
         else:
             st.info(
-                "This dataset does not contain numeric columns."
+                "No numeric data is available for statistical analysis."
             )
 
 

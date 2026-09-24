@@ -81,10 +81,36 @@ Rules:
 - Interpret "lowest", "smallest" and "min" as minimum.
 - Interpret "highest", "largest" and "max" as maximum.
 - Interpret "median" as median.
+
+Grouped analysis rules:
+- Use grouped analysis when the user wants a result for every
+  category in a column.
 - Interpret phrases such as "by department", "per department",
-  and "for each department" as requests for grouped analysis
-  when department is an available column.
-- If the request cannot be understood, return an empty JSON object.
+  and "for each department" as grouped analysis.
+- Include "group_by" with the exact available column name.
+
+Filtering rules:
+- Use a filter when the user asks about a specific category
+  or value within a column.
+- Include a "filter" object containing "column" and "value".
+- The filter column must be an exact available column name.
+- The filter value must come from the user's request.
+- Do not invent filter values.
+- Do not use "group_by" when the user only wants one category.
+- A filter can be used with average, sum, count, minimum,
+  maximum and median.
+- A filter can also be combined with grouped analysis.
+- Use only one filter per command.
+- Filters support equality comparisons only.
+- Do not generate filtering commands for cleaning actions.
+
+Important distinction:
+- "Average salary by department" means grouped analysis.
+- "Average salary of the IT department" means filtered analysis.
+- "Average salary by department for employees in California"
+  means grouped analysis with a filter.
+
+If the request cannot be understood, return an empty JSON object.
 
 Examples:
 
@@ -171,6 +197,59 @@ Response:
 }}
 
 User request:
+What is the average salary of the IT department?
+
+Response:
+{{
+    "operation": "average",
+    "column": "annual_salary",
+    "filter": {{
+        "column": "department",
+        "value": "IT"
+    }}
+}}
+
+User request:
+What is the total salary for Finance?
+
+Response:
+{{
+    "operation": "sum",
+    "column": "annual_salary",
+    "filter": {{
+        "column": "department",
+        "value": "Finance"
+    }}
+}}
+
+User request:
+How many employees work in IT?
+
+Response:
+{{
+    "operation": "count",
+    "filter": {{
+        "column": "department",
+        "value": "IT"
+    }}
+}}
+
+User request:
+What is the average annual salary by department
+for employees in California?
+
+Response:
+{{
+    "operation": "average",
+    "column": "annual_salary",
+    "group_by": "department",
+    "filter": {{
+        "column": "state",
+        "value": "California"
+    }}
+}}
+
+User request:
 Remove duplicate rows
 
 Response:
@@ -178,6 +257,8 @@ Response:
     "action": "remove_duplicates",
     "parameters": {{}}
 }}
+
+Only use example columns if they exist in the available columns.
 
 User request:
 {user_request}

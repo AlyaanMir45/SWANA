@@ -26,6 +26,31 @@ def dispatch_command(
     operation = command.get("operation")
     action = command.get("action")
 
+    # Apply filters to analysis commands
+    if operation is not None and "filter" in command:
+        filter_data = command["filter"]
+
+        filter_column = filter_data["column"]
+        filter_value = filter_data["value"]
+
+        # Check that the filter column exists
+        if filter_column not in dataframe.columns:
+            raise ValueError(
+                f"Filter column '{filter_column}' was not found."
+            )
+
+        # Filter the dataset without changing the original
+        dataframe = dataframe.loc[
+            dataframe[filter_column] == filter_value
+        ].copy()
+
+        # Check whether any matching rows were found
+        if dataframe.empty:
+            raise ValueError(
+                f"No rows found where "
+                f"{filter_column} equals {filter_value}."
+            )
+
     # Execute grouped analysis first
     if operation is not None and "group_by" in command:
         return execute_grouped_operation(

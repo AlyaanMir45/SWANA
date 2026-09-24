@@ -228,3 +228,101 @@ def test_dispatch_grouped_count(sample_dataframe):
 
     assert it_count == 2
     assert finance_count == 2
+
+
+# Test calculating the average salary for IT
+def test_filtered_average(sample_dataframe):
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    }
+
+    result = dispatch_command(sample_dataframe, command)
+
+    assert result == 70000
+
+
+# Test calculating the total salary for Finance
+def test_filtered_sum(sample_dataframe):
+    command = {
+        "operation": "sum",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "Finance",
+        },
+    }
+
+    result = dispatch_command(sample_dataframe, command)
+
+    assert result == 160000
+
+
+# Test counting employees in IT
+def test_filtered_count(sample_dataframe):
+    command = {
+        "operation": "count",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    }
+
+    result = dispatch_command(sample_dataframe, command)
+
+    assert result == 2
+
+
+# Test filtering with a column that does not exist
+def test_invalid_filter_column(sample_dataframe):
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "invalid_column",
+            "value": "IT",
+        },
+    }
+
+    with pytest.raises(ValueError, match="Filter column"):
+        dispatch_command(sample_dataframe, command)
+
+
+# Test filtering when no rows match
+def test_filter_no_matches(sample_dataframe):
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "Marketing",
+        },
+    }
+
+    with pytest.raises(ValueError, match="No rows found"):
+        dispatch_command(sample_dataframe, command)
+
+
+# Test that filtering does not modify the original dataset
+def test_filter_preserves_dataset(sample_dataframe):
+    original = sample_dataframe.copy(deep=True)
+
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+        },
+    }
+
+    dispatch_command(sample_dataframe, command)
+
+    pd.testing.assert_frame_equal(
+        sample_dataframe,
+        original,
+    )

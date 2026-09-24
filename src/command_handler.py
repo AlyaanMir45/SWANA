@@ -18,8 +18,21 @@ ALLOWED_OPERATIONS = {
     "median",
 }
 
+# Operations supported by grouped analysis
+GROUPED_OPERATIONS = {
+    "average",
+    "sum",
+    "count",
+}
+
 
 def parse_command(command: dict) -> dict:
+    # Check that the command is a dictionary
+    if not isinstance(command, dict):
+        raise ValueError(
+            "Command must be a dictionary."
+        )
+
     # Check for a cleaning action
     action = command.get("action")
 
@@ -53,7 +66,7 @@ def parse_command(command: dict) -> dict:
         if operation != "count":
             column = command.get("column")
 
-            if not column:
+            if not isinstance(column, str) or not column.strip():
                 raise ValueError(
                     f"{operation} requires a column."
                 )
@@ -69,7 +82,50 @@ def parse_command(command: dict) -> dict:
                     "A valid grouping column is required."
                 )
 
+            # Only supported operations can be grouped
+            if operation not in GROUPED_OPERATIONS:
+                raise ValueError(
+                    f"Grouped {operation} is not supported."
+                )
+
             parsed_command["group_by"] = group_by
+
+        # Check for a filter
+        if "filter" in command:
+            filter_data = command["filter"]
+
+            # Filter must contain a column and value
+            if not isinstance(filter_data, dict):
+                raise ValueError(
+                    "Filter must be a dictionary."
+                )
+
+            filter_column = filter_data.get("column")
+            filter_value = filter_data.get("value")
+
+            # Validate the filter column
+            if (
+                not isinstance(filter_column, str)
+                or not filter_column.strip()
+            ):
+                raise ValueError(
+                    "A valid filter column is required."
+                )
+
+            # Validate the filter value
+            if (
+                not isinstance(filter_value, (str, int, float, bool))
+                or isinstance(filter_value, str)
+                and not filter_value.strip()
+            ):
+                raise ValueError(
+                    "A valid filter value is required."
+                )
+
+            parsed_command["filter"] = {
+                "column": filter_column,
+                "value": filter_value,
+            }
 
         return parsed_command
 
