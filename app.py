@@ -20,6 +20,7 @@ from src.llm_client import (
 )
 from src.command_handler import parse_command
 from src.dispatcher import dispatch_command
+from src.graphmaker import prepare_grouped_chart
 
 
 # Configure the browser tab and page layout
@@ -70,6 +71,7 @@ else:
 
             # Clear results from any previously uploaded dataset
             st.session_state.pop("analysis_result", None)
+            st.session_state.pop("analysis_command", None)
 
         # Get the current working dataset
         dataframe = st.session_state["dataframe"]
@@ -101,8 +103,6 @@ else:
                     dataframe.columns.tolist(),
                 )
 
-                
-
                 # Validate the command
                 command = parse_command(command)
 
@@ -116,9 +116,13 @@ else:
                 if "action" in command:
                     st.session_state["dataframe"] = result
 
-                    # Remove any previous analysis result
+                    # Clear previous analysis results and charts
                     st.session_state.pop(
                         "analysis_result",
+                        None,
+                    )
+                    st.session_state.pop(
+                        "analysis_command",
                         None,
                     )
 
@@ -128,9 +132,10 @@ else:
 
                     st.rerun()
 
-                # Grouped analysis returns a table
+                # Grouped analysis returns a table and chart
                 elif "group_by" in command:
                     st.session_state["analysis_result"] = result
+                    st.session_state["analysis_command"] = command
 
                     st.success(
                         "Grouped analysis completed successfully."
@@ -139,6 +144,12 @@ else:
                 # Regular analysis returns a single value
                 else:
                     st.session_state["analysis_result"] = result
+
+                    # Remove any previous grouped chart
+                    st.session_state.pop(
+                        "analysis_command",
+                        None,
+                    )
 
                     st.success(
                         "Analysis completed successfully."
@@ -163,13 +174,37 @@ else:
 
             analysis_result = st.session_state["analysis_result"]
 
-            # Display grouped analysis as a table
+            # Display grouped analysis as a table and chart
             if isinstance(analysis_result, pd.DataFrame):
                 st.dataframe(
                     analysis_result,
                     use_container_width=True,
                     hide_index=True,
                 )
+
+                # Get the command associated with this result
+                analysis_command = st.session_state.get(
+                    "analysis_command"
+                )
+
+                if (
+                    analysis_command
+                    and "group_by" in analysis_command
+                ):
+                    # Prepare the grouped results for visualization
+                    chart_data = prepare_grouped_chart(
+                        analysis_result,
+                        analysis_command["group_by"],
+                        analysis_command["operation"],
+                    )
+
+                    st.subheader("Visualization")
+
+                    # Display a bar chart
+                    st.bar_chart(
+                        chart_data,
+                        use_container_width=True,
+                    )
 
             # Display ordinary analysis as a single value
             else:
@@ -195,8 +230,13 @@ else:
                     dataframe
                 )
 
+                # Clear previous analysis results and charts
                 st.session_state.pop(
                     "analysis_result",
+                    None,
+                )
+                st.session_state.pop(
+                    "analysis_command",
                     None,
                 )
 
@@ -210,8 +250,13 @@ else:
                     dataframe
                 )
 
+                # Clear previous analysis results and charts
                 st.session_state.pop(
                     "analysis_result",
+                    None,
+                )
+                st.session_state.pop(
+                    "analysis_command",
                     None,
                 )
 
@@ -226,8 +271,13 @@ else:
                     dataframe
                 )
 
+                # Clear previous analysis results and charts
                 st.session_state.pop(
                     "analysis_result",
+                    None,
+                )
+                st.session_state.pop(
+                    "analysis_command",
                     None,
                 )
 
@@ -241,8 +291,13 @@ else:
                     dataframe
                 )
 
+                # Clear previous analysis results and charts
                 st.session_state.pop(
                     "analysis_result",
+                    None,
+                )
+                st.session_state.pop(
+                    "analysis_command",
                     None,
                 )
 
@@ -256,8 +311,13 @@ else:
                 st.session_state["original_dataframe"].copy()
             )
 
+            # Clear previous analysis results and charts
             st.session_state.pop(
                 "analysis_result",
+                None,
+            )
+            st.session_state.pop(
+                "analysis_command",
                 None,
             )
 
