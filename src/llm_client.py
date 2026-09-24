@@ -9,15 +9,27 @@ from openai import OpenAI
 load_dotenv()
 
 
+# Configure the Groq API client
 client = OpenAI(
     api_key=os.getenv("GROQ_API_KEY"),
     base_url="https://api.groq.com/openai/v1",
 )
 
 
+# Custom exception for invalid AI-generated commands
+class CommandGenerationError(Exception):
+    """
+    Raised when Groq cannot generate a valid SWANA command.
+    """
+    pass
+
+
 def generate_command(user_request: str, columns: list[str]) -> dict:
     """
     Convert a user's natural language request into a SWANA command.
+
+    Retry once if Groq returns invalid JSON or an invalid
+    command structure.
     """
 
     column_list = ", ".join(columns)
@@ -171,11 +183,45 @@ User request:
 {user_request}
 """
 
-    response = client.responses.create(
-        model="openai/gpt-oss-20b",
-        input=prompt,
-    )
+    # Allow a maximum of two attempts
+    for attempt in range(2):
+        try:
+            # Send the request to Groq
+            response = client.responses.create(
+                model="openai/gpt-oss-20b",
+                input=prompt,
+            )
 
-    command_text = response.output_text.strip()
+            # Get the text returned by Groq
+            command_text = response.output_text.strip()
 
-    return json.loads(command_text)
+            # Convert the JSON text into a Python object
+            command = json.loads(command_text)
+
+            # Ensure the response is a JSON object
+            if not isinstance(command, dict):
+                raise CommandGenerationError(
+                    "Groq returned an invalid command format."
+                )
+
+            # Ensure the command contains an action or operation
+            if "action" not in command and "operation" not in command:
+                raise CommandGenerationError(
+                    "Groq did not generate a supported command."
+                )
+
+            return command
+
+        except (
+            json.JSONDecodeError,
+            CommandGenerationError,
+        ):
+            # Retry once when the response is invalid
+            if attempt == 0:
+                continue
+
+            # Both attempts failed
+            raise CommandGenerationError(
+                "SWANA could not understand the request. "
+                "Try rephrasing it."
+            )

@@ -14,7 +14,10 @@ from src.cleaner import (
     remove_empty_columns,
     standardize_column_names,
 )
-from src.llm_client import generate_command
+from src.llm_client import (
+    generate_command,
+    CommandGenerationError,
+)
 from src.command_handler import parse_command
 from src.dispatcher import dispatch_command
 
@@ -140,6 +143,9 @@ else:
                     st.success(
                         "Analysis completed successfully."
                     )
+
+            except CommandGenerationError as error:
+                st.warning(str(error))
 
             except ValueError as error:
                 st.error(str(error))
