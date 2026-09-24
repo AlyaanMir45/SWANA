@@ -37,6 +37,12 @@ minimum
 maximum
 median
 
+Supported grouped analysis operations:
+
+average
+sum
+count
+
 Supported cleaning actions:
 
 remove_duplicates
@@ -50,14 +56,22 @@ Rules:
 - Do not include explanations or Markdown.
 - Use exact column names from the available columns.
 - Never invent column names.
+- Use only the supported operations and cleaning actions.
 - For all analysis operations except count, include the column.
 - For count, no column is required.
+- For grouped analysis, include "group_by".
+- The "group_by" value must be an exact available column name.
+- Only average, sum and count support grouped analysis.
+- For grouped count, include "group_by" but do not include "column".
+- Do not include "group_by" for ordinary analysis.
 - Interpret "mean" as average.
 - Interpret "total" as sum when referring to a numeric column.
 - Interpret "lowest", "smallest" and "min" as minimum.
 - Interpret "highest", "largest" and "max" as maximum.
 - Interpret "median" as median.
-- Use only the supported operations and cleaning actions.
+- Interpret phrases such as "by department", "per department",
+  and "for each department" as requests for grouped analysis
+  when department is an available column.
 - If the request cannot be understood, return an empty JSON object.
 
 Examples:
@@ -113,6 +127,35 @@ Response:
 {{
     "operation": "median",
     "column": "annual_salary"
+}}
+
+User request:
+What is the average annual salary by department?
+
+Response:
+{{
+    "operation": "average",
+    "column": "annual_salary",
+    "group_by": "department"
+}}
+
+User request:
+What is the total annual salary by department?
+
+Response:
+{{
+    "operation": "sum",
+    "column": "annual_salary",
+    "group_by": "department"
+}}
+
+User request:
+How many employees are in each department?
+
+Response:
+{{
+    "operation": "count",
+    "group_by": "department"
 }}
 
 User request:

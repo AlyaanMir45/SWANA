@@ -118,3 +118,72 @@ def test_api_failure(mock_create):
             "What is the average annual salary?",
             ["annual_salary"]
         )
+
+@patch("src.llm_client.client.responses.create")
+def test_grouped_average_prompt(mock_create):
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "average",
+        "column": "annual_salary",
+        "group_by": "department",
+    })
+
+    mock_create.return_value = mock_response
+
+    result = generate_command(
+        "What is the average annual salary by department?",
+        ["annual_salary", "department"],
+    )
+
+    assert result["operation"] == "average"
+    assert result["column"] == "annual_salary"
+    assert result["group_by"] == "department"
+
+    prompt = mock_create.call_args.kwargs["input"]
+
+    assert "group_by" in prompt
+    assert "department" in prompt
+
+
+@patch("src.llm_client.client.responses.create")
+def test_grouped_sum_command(mock_create):
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "sum",
+        "column": "annual_salary",
+        "group_by": "department",
+    })
+
+    mock_create.return_value = mock_response
+
+    result = generate_command(
+        "What is the total annual salary by department?",
+        ["annual_salary", "department"],
+    )
+
+    assert result == {
+        "operation": "sum",
+        "column": "annual_salary",
+        "group_by": "department",
+    }
+
+
+@patch("src.llm_client.client.responses.create")
+def test_grouped_count_command(mock_create):
+    mock_response = MagicMock()
+    mock_response.output_text = json.dumps({
+        "operation": "count",
+        "group_by": "department",
+    })
+
+    mock_create.return_value = mock_response
+
+    result = generate_command(
+        "How many employees are in each department?",
+        ["department"],
+    )
+
+    assert result == {
+        "operation": "count",
+        "group_by": "department",
+    }

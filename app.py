@@ -1,3 +1,4 @@
+
 import pandas as pd
 import streamlit as st
 
@@ -33,7 +34,7 @@ st.subheader("Smart Web Analytics & Narrative Assistant")
 
 st.write(
     "Upload a CSV or Excel dataset to explore its structure, "
-    "clean the data, and view basic statistics."
+    "clean the data, and analyze its contents."
 )
 
 
@@ -63,6 +64,9 @@ else:
             st.session_state["original_dataframe"] = dataframe.copy()
             st.session_state["dataframe"] = dataframe.copy()
             st.session_state["file_id"] = file_id
+
+            # Clear results from any previously uploaded dataset
+            st.session_state.pop("analysis_result", None)
 
         # Get the current working dataset
         dataframe = st.session_state["dataframe"]
@@ -94,6 +98,8 @@ else:
                     dataframe.columns.tolist(),
                 )
 
+                
+
                 # Validate the command
                 command = parse_command(command)
 
@@ -103,26 +109,65 @@ else:
                     command,
                 )
 
-                # Save the cleaned dataset
-                if isinstance(result, pd.DataFrame):
+                # Cleaning commands update the working dataset
+                if "action" in command:
                     st.session_state["dataframe"] = result
 
+                    # Remove any previous analysis result
+                    st.session_state.pop(
+                        "analysis_result",
+                        None,
+                    )
+
                     st.success(
-                        "Command completed successfully."
+                        "Dataset cleaned successfully."
                     )
 
                     st.rerun()
 
-                # Show an analysis result
-                else:
+                # Grouped analysis returns a table
+                elif "group_by" in command:
+                    st.session_state["analysis_result"] = result
+
                     st.success(
-                        "Command completed successfully."
+                        "Grouped analysis completed successfully."
                     )
 
-                    st.write(result)
+                # Regular analysis returns a single value
+                else:
+                    st.session_state["analysis_result"] = result
+
+                    st.success(
+                        "Analysis completed successfully."
+                    )
 
             except ValueError as error:
                 st.error(str(error))
+
+            except Exception as error:
+                st.error(
+                    f"Could not complete the command: {error}"
+                )
+
+
+        # Display the latest analysis result
+
+        if "analysis_result" in st.session_state:
+            st.subheader("Analysis Result")
+
+            analysis_result = st.session_state["analysis_result"]
+
+            # Display grouped analysis as a table
+            if isinstance(analysis_result, pd.DataFrame):
+                st.dataframe(
+                    analysis_result,
+                    use_container_width=True,
+                    hide_index=True,
+                )
+
+            # Display ordinary analysis as a single value
+            else:
+                st.write(analysis_result)
 
 
         # Data cleaning
@@ -143,6 +188,12 @@ else:
                 st.session_state["dataframe"] = remove_duplicates(
                     dataframe
                 )
+
+                st.session_state.pop(
+                    "analysis_result",
+                    None,
+                )
+
                 st.rerun()
 
             if st.button(
@@ -152,6 +203,12 @@ else:
                 st.session_state["dataframe"] = remove_empty_columns(
                     dataframe
                 )
+
+                st.session_state.pop(
+                    "analysis_result",
+                    None,
+                )
+
                 st.rerun()
 
         with clean_column2:
@@ -162,6 +219,12 @@ else:
                 st.session_state["dataframe"] = remove_missing_rows(
                     dataframe
                 )
+
+                st.session_state.pop(
+                    "analysis_result",
+                    None,
+                )
+
                 st.rerun()
 
             if st.button(
@@ -171,13 +234,27 @@ else:
                 st.session_state["dataframe"] = standardize_column_names(
                     dataframe
                 )
+
+                st.session_state.pop(
+                    "analysis_result",
+                    None,
+                )
+
                 st.rerun()
 
+
         # Reset the dataset
+
         if st.button("Reset Dataset"):
             st.session_state["dataframe"] = (
                 st.session_state["original_dataframe"].copy()
             )
+
+            st.session_state.pop(
+                "analysis_result",
+                None,
+            )
+
             st.rerun()
 
 
