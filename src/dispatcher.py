@@ -39,9 +39,28 @@ def dispatch_command(
                 f"Filter column '{filter_column}' was not found."
             )
 
+        # Compare text without case sensitivity
+        if isinstance(filter_value, str):
+            matching_rows = (
+                dataframe[filter_column]
+                .astype("string")
+                .str.strip()
+                .str.casefold()
+                == filter_value.strip().casefold()
+            )
+
+        # Keep exact comparisons for numbers and booleans
+        else:
+            matching_rows = (
+                dataframe[filter_column] == filter_value
+            )
+
+        # Treat missing values as non-matches
+        matching_rows = matching_rows.fillna(False)
+
         # Filter the dataset without changing the original
         dataframe = dataframe.loc[
-            dataframe[filter_column] == filter_value
+            matching_rows
         ].copy()
 
         # Check whether any matching rows were found

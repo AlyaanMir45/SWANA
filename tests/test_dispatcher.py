@@ -326,3 +326,49 @@ def test_filter_preserves_dataset(sample_dataframe):
         sample_dataframe,
         original,
     )
+
+
+# Test filtering with lowercase text
+def test_case_insensitive_filter(sample_dataframe):
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "filter": {
+            "column": "department",
+            "value": "it",
+        },
+    }
+
+    result = dispatch_command(sample_dataframe, command)
+
+    assert result == 70000
+
+
+# Test filtering with extra whitespace
+def test_filter_ignores_whitespace(sample_dataframe):
+    command = {
+        "operation": "count",
+        "filter": {
+            "column": "department",
+            "value": " IT ",
+        },
+    }
+
+    result = dispatch_command(sample_dataframe, command)
+
+    assert result == 2
+
+
+# Test that numeric filtering still works
+def test_numeric_filter(sample_dataframe):
+    command = {
+        "operation": "count",
+        "filter": {
+            "column": "annual_salary",
+            "value": 80000,
+        },
+    }
+
+    result = dispatch_command(sample_dataframe, command)
+
+    assert result == 1

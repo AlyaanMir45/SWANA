@@ -178,3 +178,103 @@ def test_invalid_grouping_column():
 
     with pytest.raises(ValueError):
         parse_command(command)
+
+# Test a command with both cleaning and analysis
+def test_action_and_operation_together():
+    command = {
+        "action": "remove_duplicates",
+        "operation": "average",
+        "column": "annual_salary",
+    }
+
+    with pytest.raises(ValueError, match="both an action and an operation"):
+        parse_command(command)
+
+
+# Test invalid cleaning parameters
+def test_invalid_cleaning_parameters():
+    command = {
+        "action": "remove_duplicates",
+        "parameters": ["invalid"],
+    }
+
+    with pytest.raises(ValueError, match="Parameters must be a dictionary"):
+        parse_command(command)
+
+
+# Test filling missing values without a column
+def test_fill_missing_values_without_column():
+    command = {
+        "action": "fill_missing_values",
+        "parameters": {
+            "value": 0,
+        },
+    }
+
+    with pytest.raises(ValueError, match="valid column"):
+        parse_command(command)
+
+
+# Test a filter with an unsupported field
+def test_filter_with_extra_field():
+    command = {
+        "operation": "count",
+        "filter": {
+            "column": "department",
+            "value": "IT",
+            "operator": "greater_than",
+        },
+    }
+
+    with pytest.raises(ValueError, match="only a column and value"):
+        parse_command(command)
+
+
+# Test a filter with a missing value
+def test_filter_missing_value():
+    command = {
+        "operation": "count",
+        "filter": {
+            "column": "department",
+        },
+    }
+
+    with pytest.raises(ValueError, match="only a column and value"):
+        parse_command(command)
+
+
+# Test a filter with NaN
+def test_filter_nan_value():
+    command = {
+        "operation": "count",
+        "filter": {
+            "column": "annual_salary",
+            "value": float("nan"),
+        },
+    }
+
+    with pytest.raises(ValueError, match="finite"):
+        parse_command(command)
+
+
+# Test unsupported fields in an analysis command
+def test_analysis_with_unsupported_field():
+    command = {
+        "operation": "average",
+        "column": "annual_salary",
+        "execute_python": "print('hello')",
+    }
+
+    with pytest.raises(ValueError, match="unsupported fields"):
+        parse_command(command)
+
+
+# Test count with an unexpected column
+def test_count_with_column():
+    command = {
+        "operation": "count",
+        "column": "department",
+    }
+
+    with pytest.raises(ValueError, match="Count does not accept"):
+        parse_command(command)
